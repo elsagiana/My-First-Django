@@ -1,5 +1,5 @@
 import datetime
-from django.http import HttpResponseRedirect
+from django.http import HttpRequest, HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import redirect
 from django.contrib.auth.forms import UserCreationForm
@@ -71,3 +71,25 @@ def logout_user(request):
     response = HttpResponseRedirect(reverse('wishlist:login'))
     response.delete_cookie('last_login')
     return response
+
+@login_required(login_url='/wishlist/login/')
+def show_wishlist_ajax(request):
+    context = {
+    'nama': 'Elsa Giana Abigail Sitompul',
+    'last_login': request.COOKIES['last_login'],
+    }
+    return render(request, "wishlist_ajax.html", context)
+
+@login_required(login_url='/wishlist/login/')
+def add_wishlist_ajax(request: HttpRequest):
+    if request.method == "POST":
+        nama_barang = request.POST.get('nama_barang')
+        harga_barang = request.POST.get('harga_barang')
+        deskripsi = request.POST.get('deskripsi')
+        new_barang =  BarangWishlist(
+            nama_barang = nama_barang,
+            harga_barang = harga_barang,
+            deskripsi = deskripsi
+        )
+        new_barang.save()
+        return HttpResponse(serializers.serialize("json", [new_barang]), content_type='application/json')
